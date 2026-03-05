@@ -4,7 +4,7 @@ Apple Music rich presence for Discord, built with Bun.
 
 <br />
 
-<img src="Screenshot 2026-03-06 at 1.54.06 AM.png" width="320" />
+<img width="645" height="363" alt="Screenshot 2026-03-06 at 1 54 06 AM" src="https://github.com/user-attachments/assets/78d8020a-64ae-47e5-a196-3e2434c53618" />
 
 <br />
 
