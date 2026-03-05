@@ -2,11 +2,13 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
 permissions:
   contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
   release:
@@ -15,30 +17,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          fetch-depth: 0
 
-      - name: Compute sha256 of release tarball
-        id: sha
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update formula sha256
+        if: steps.semantic.outputs.new_release_published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG=${GITHUB_REF_NAME}
-          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
+          VERSION=${{ steps.semantic.outputs.new_release_version }}
+          URL="https://github.com/rit3zh/apple-music-discord-rpc/archive/refs/tags/v${VERSION}.tar.gz"
           SHA=$(curl -sL "$URL" | shasum -a 256 | awk '{print $1}')
-          echo "sha256=$SHA" >> $GITHUB_OUTPUT
-          echo "url=$URL" >> $GITHUB_OUTPUT
 
-      - name: Update formula
-        run: |
-          sed -i "s|url \".*\"|url \"${{ steps.sha.outputs.url }}\"|" Formula/apple-music-discord-rpc.rb
-          sed -i "s|sha256 \".*\"|sha256 \"${{ steps.sha.outputs.sha256 }}\"|" Formula/apple-music-discord-rpc.rb
+          sed -i "s|url \".*\"|url \"${URL}\"|" Formula/apple-music-discord-rpc.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${SHA}\"|" Formula/apple-music-discord-rpc.rb
 
-      - name: Commit updated formula
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/apple-music-discord-rpc.rb
-          git commit -m "formula: update sha256 for ${{ github.ref_name }}"
-          git push origin HEAD:main
+          git commit -m "chore(formula): update sha256 for v${VERSION} [skip ci]"
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/rit3zh/apple-music-discord-rpc.git main
