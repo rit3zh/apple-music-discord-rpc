@@ -17,7 +17,8 @@ Apple Music rich presence for Discord, built with Bun.
 ### Via Homebrew (Recommended)
 
 ```sh
-brew install https://raw.githubusercontent.com/rit3zh/apple-music-discord-rpc/main/Formula/apple-music-discord-rpc.rb
+brew tap rit3zh/tap
+brew install apple-music-discord-rpc
 brew services start apple-music-discord-rpc
 ```
 
