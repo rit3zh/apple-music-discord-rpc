@@ -6,6 +6,7 @@ class AppleMusicDiscordRpc < Formula
   license "MIT"
 
   depends_on "oven-sh/bun/bun"
+  depends_on "ffmpeg"
 
   service do
     run [opt_bin/"apple-music-discord-rpc"]
@@ -18,13 +19,23 @@ class AppleMusicDiscordRpc < Formula
   def install
     libexec.install Dir["*"]
 
-    system Formula["oven-sh/bun/bun"].opt_bin/"bun", "install",
-           "--production", "--frozen-lockfile",
-           chdir: libexec
+    cd libexec do
+      system Formula["oven-sh/bun/bun"].opt_bin/"bun", "install",
+             "--production", "--frozen-lockfile"
+    end
 
     (bin/"apple-music-discord-rpc").write <<~SH
       #!/bin/bash
+      export TMPDIR=$(getconf DARWIN_USER_TEMP_DIR)
+      export PATH="#{HOMEBREW_PREFIX}/bin:#{HOMEBREW_PREFIX}/sbin:/usr/local/bin:/usr/bin:/bin:$PATH"
       exec "#{Formula["oven-sh/bun/bun"].opt_bin}/bun" "#{libexec}/index.ts" "$@"
+    SH
+
+    (bin/"apple-music-rpc").write <<~SH
+      #!/bin/bash
+      export TMPDIR=$(getconf DARWIN_USER_TEMP_DIR)
+      export PATH="#{HOMEBREW_PREFIX}/bin:#{HOMEBREW_PREFIX}/sbin:/usr/local/bin:/usr/bin:/bin:$PATH"
+      exec "#{Formula["oven-sh/bun/bun"].opt_bin}/bun" "#{libexec}/cli.ts" "$@"
     SH
   end
 
